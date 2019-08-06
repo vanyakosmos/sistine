@@ -1,3 +1,3 @@
-from .sistine import run
+from sistine.sistine import run
 
 run()

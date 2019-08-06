@@ -28,16 +28,14 @@ and we’d be able to translate the video feed into touch events using computer 
 
 ## Installation
 
-* Install Python via webisite https://www.python.org/download
-Or via Homebrew on MacOS:
-* First, make sure you have [Mac Homebrew](https://brew.sh/) installed on your computer. 
-* Install Python via Homebrew with `brew install python3`
-* Download and Install pip. Follow this video : https://www.youtube.com/watch?v=AVCcFyYynQY
-* Install dependencies `pip install -r requirements.txt`
+- Install python and pip
+- Install dependencies: `pip install -r requirements.txt`
 
-## Running on Linux or MacOS
+## Running
 
-Run `python -m sistine`
+```bash
+python -m sistine
+```
 
 
 ## License

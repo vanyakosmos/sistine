@@ -1,12 +1,24 @@
+import pickle
+import platform
+import sys
+
 import cv2
 import numpy as np
-import sys
-import pickle
-from . import simulate
+
+IS_WIN = platform.system() == 'Windows'
+
+if IS_WIN:
+    from sistine import simulate_windows as simulate
+else:
+    from sistine import simulate_windows as simulate
 
 # dont change parameters
-COMP_DIMENSION_X = 1440
-COMP_DIMENSION_Y = 900
+if IS_WIN:
+    COMP_DIMENSION_X = 1366
+    COMP_DIMENSION_Y = 768
+else:
+    COMP_DIMENSION_X = 1440
+    COMP_DIMENSION_Y = 900
 
 # parameters
 MIDPOINT_DETECTION_SKIP_ZONE = 0.08
@@ -18,14 +30,22 @@ REFLECTION_MIN_RATIO = 0.1
 FINGER_WIDTH_LOCATION_RATIO = 0.5  # percent of way down from point to dead space
 MOVING_AVERAGE_WEIGHT = 0.5
 
-CAPTURE_DIMENSION_X = 1280
-CAPTURE_DIMENSION_Y = 720
+if IS_WIN:
+    CAPTURE_DIMENSION_X = 300
+    CAPTURE_DIMENSION_Y = 450
+else:
+    CAPTURE_DIMENSION_X = 1280
+    CAPTURE_DIMENSION_Y = 720
 
-WINDOW_SHIFT_X = (COMP_DIMENSION_X - CAPTURE_DIMENSION_X) / 2
-WINDOW_SHIFT_Y = (COMP_DIMENSION_Y - CAPTURE_DIMENSION_Y) / 2
+WINDOW_SHIFT_X = (COMP_DIMENSION_X - CAPTURE_DIMENSION_X) // 2
+WINDOW_SHIFT_Y = (COMP_DIMENSION_Y - CAPTURE_DIMENSION_Y) // 2
 
-CALIBRATION_X_COORDS = [.3, .5, .7]
-CALIBRATION_Y_COORDS = [.5, .7, .9]
+if IS_WIN:
+    CALIBRATION_X_COORDS = [.1, .5, .9]
+    CALIBRATION_Y_COORDS = [.2, .6, .95]
+else:
+    CALIBRATION_X_COORDS = [.3, .5, .7]
+    CALIBRATION_Y_COORDS = [.5, .7, .9]
 
 VERT_STAGE_SETUP_TIME = 3
 VERT_STAGE_TIME = 6
@@ -142,8 +162,10 @@ def find_hover_point(contour_big, x1, y1, w1, h1, contour_small, x2, y2, w2, h2)
 # touch is true if it's a touch, otherwise it's false
 def find(segmented_image, debugframe=None, options=None):
     options = options or {}
-    _, cnts, _ = cv2.findContours(
-        segmented_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    cnts, _ = cv2.findContours(
+        segmented_image.copy(),
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE,
     )
     byarea = []
     for c in cnts:
@@ -161,8 +183,8 @@ def find(segmented_image, debugframe=None, options=None):
             x2, y2, w2, h2 = cv2.boundingRect(smaller_contour)
             smaller_area = byarea[-2][0]
             # if they overlap in X and the smaller one is above the larger one
-            if (not (x1 + w1 < x2 or x2 + w2 < x1)) and y2 + h2 < y1 and \
-                    smaller_area / largest_area >= REFLECTION_MIN_RATIO:
+            overlap = not (x1 + w1 < x2 or x2 + w2 < x1)
+            if overlap and y2 + h2 < y1 and smaller_area / largest_area >= REFLECTION_MIN_RATIO:
                 # hover
                 if debugframe is not None:
                     if not options['nocontour'] and not options['nodemodebug']:
